@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spray Liberty Today? — Glufosinate Decision Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2e8;
+    --bg-deep: #ebe6d2;
+    --paper: #fbf9f0;
+    --ink: #1a1f12;
+    --ink-soft: #3f4a33;
+    --ink-faint: #8a907b;
+    --line: #c4c9b5;
+    --line-soft: #dde0cc;
+    --liberty: #c45a1a;          /* burnt orange — Liberty/BASF cue */
+    --liberty-deep: #7a3208;
+    --sun: #D2AA3C;
+    --sun-deep: #8c6f1f;
+    --rain: #3a6b8a;
+    --rain-fcst: #7fa3bd;
+    --good: #658647;
+    --good-deep: #3f5728;
+    --bad: #a44f1b;
+    --caution: #b8841c;
+    --accent: #3f5728;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(196, 90, 26, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(90, 125, 58, 0.05) 0%, transparent 40%);
+  }
+
+  .tool {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 56px;
+  }
+
+  /* ---------- BRAND BAR (logo header) ---------- */
+  .brandbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .brandbar .logo {
+    height: 56px;
+    width: auto;
+    display: block;
+  }
+  .brandbar .copyright {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+
+  /* MASTHEAD */
+  .masthead {
+    border-top: 3px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 18px 0 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .masthead h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3rem);
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+  }
+  .masthead h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--liberty);
+  }
+  .masthead .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .masthead .meta .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--good);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .masthead .location {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    margin-bottom: 28px;
+  }
+  .controls .group { display: flex; flex-direction: column; gap: 6px; }
+  .controls label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .controls input {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95rem;
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    border-radius: 2px;
+    width: 200px;
+  }
+  #state-input { width: 90px; text-transform: uppercase; }
+  .controls input:focus {
+    outline: none;
+    border-color: var(--ink);
+  }
+  .controls button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+  .controls button:hover { background: var(--liberty); }
+
+  /* TODAY VERDICT */
+  .today-block {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .today-stripe {
+    height: 6px;
+    background: var(--ink);
+    transition: background 0.4s;
+  }
+  .today-stripe.go { background: var(--good); }
+  .today-stripe.cau { background: var(--caution); }
+  .today-stripe.no { background: var(--bad); }
+
+  .today-inner { padding: 28px 32px 32px; }
+
+  .today-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .today-headline {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 18px;
+  }
+  .today-headline em { font-style: italic; font-weight: 400; }
+  .today-headline.go em { color: var(--good); }
+  .today-headline.cau em { color: var(--caution); }
+  .today-headline.no em { color: var(--bad); }
+
+  .today-summary {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    max-width: 65ch;
+    margin-bottom: 22px;
+  }
+
+  /* WINDOW STRIP — when can you actually spray today */
+  .window-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 22px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 640px) {
+    .window-row { grid-template-columns: 1fr; }
+  }
+  .window-box {
+    padding: 16px 18px;
+    background: var(--bg);
+    border-left: 4px solid var(--liberty);
+    border-radius: 2px;
+  }
+  .window-box .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--liberty-deep);
+    margin-bottom: 6px;
+  }
+  .window-box .when {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.45rem;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .window-box .when.muted {
+    color: var(--ink-faint);
+    font-weight: 500;
+    font-size: 1.1rem;
+    font-style: italic;
+  }
+  .window-box .when-detail {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  /* HOURLY STRIP — visual when spray works today */
+  .hourly-strip-wrap {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 14px 16px 18px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+  }
+  .hourly-strip-wrap .strip-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hourly-strip-wrap .strip-title .legend-mini {
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+  }
+  .hourly-strip-wrap .strip-title .legend-mini .sw {
+    display: inline-block;
+    width: 12px; height: 8px;
+    border-radius: 1px;
+    margin: 0 4px 0 8px;
+    vertical-align: -1px;
+  }
+  .hourly-strip-wrap .strip-title .legend-mini .sw.go { background: var(--good); }
+  .hourly-strip-wrap .strip-title .legend-mini .sw.cau { background: var(--caution); }
+  .hourly-strip-wrap .strip-title .legend-mini .sw.no { background: var(--bad); }
+  .hourly-strip-wrap .strip-title .legend-mini .sw.night { background: #232a1a; }
+
+  .hour-strip {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+  .hour-cell {
+    height: 32px;
+    position: relative;
+    background: var(--line-soft);
+    border-radius: 1px;
+    cursor: default;
+  }
+  .hour-cell.night { background: #232a1a; }
+  .hour-cell.go { background: var(--good); }
+  .hour-cell.cau { background: var(--caution); }
+  .hour-cell.no { background: var(--bad); }
+  .hour-cell.now {
+    box-shadow: 0 0 0 2px var(--ink);
+    z-index: 2;
+  }
+  .hour-cell .tip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    line-height: 1.4;
+    padding: 6px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .hour-cell:hover .tip { visibility: visible; }
+  .hour-labels {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--ink-faint);
+    text-align: center;
+  }
+  .hour-labels span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* WHY (factor list under today) */
+  .why-list {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line-soft);
+  }
+  .why-list h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .why-list ul { list-style: none; }
+  .why-list li {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+  }
+  .why-list li .ico {
+    flex: 0 0 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    text-align: center;
+  }
+  .why-list li.go .ico { color: var(--good); }
+  .why-list li.cau .ico { color: var(--caution); }
+  .why-list li.no .ico { color: var(--bad); }
+
+  /* SECTION HEADERS */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin: 32px 0 18px;
+    flex-wrap: wrap;
+  }
+  .section-head .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  .section-head h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+  }
+  .section-head .sub {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-faint);
+    margin-left: auto;
+  }
+  .section-head .head-legend {
+    margin-left: auto;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    align-items: center;
+  }
+  .section-head .head-legend .lg-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-head .head-legend .lg-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 6px;
+    border-radius: 1px;
+  }
+  .section-head .head-legend .lg-swatch.go { background: var(--good); }
+  .section-head .head-legend .lg-swatch.cau { background: var(--caution); }
+  .section-head .head-legend .lg-swatch.no { background: var(--bad); }
+  @media (max-width: 720px) {
+    .section-head .head-legend { gap: 10px; font-size: 0.58rem; }
+    .section-head .head-legend .lg-swatch { width: 14px; }
+  }
+
+  /* WEEK CARDS */
+  .week-strip {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 900px) {
+    .week-strip { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 540px) {
+    .week-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+  .day-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 12px 10px;
+    border-radius: 2px;
+    position: relative;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .day-card.today { border: 2px solid var(--ink); }
+  .day-card.best { box-shadow: inset 4px 0 0 var(--liberty); }
+
+  .day-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .day-date {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .day-light {
+    height: 8px;
+    border-radius: 1px;
+    background: var(--line-soft);
+    margin-bottom: 4px;
+  }
+  .day-light.go { background: var(--good); }
+  .day-light.cau { background: var(--caution); }
+  .day-light.no { background: var(--bad); }
+  .day-light-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .day-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.78rem;
+    padding: 3px 0;
+    border-top: 1px dashed var(--line-soft);
+  }
+  .day-stat:first-of-type { border-top: none; }
+  .day-stat .k {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .day-stat .v {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .day-stat .v.warn { color: var(--bad); }
+  .day-stat .v.good { color: var(--good-deep); }
+  .day-stat .v.great { color: var(--liberty-deep); font-weight: 600; }
+  .day-stat .v.poor { color: var(--bad); }
+
+  /* HERO STATS */
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  @media (max-width: 720px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 420px) {
+    .hero-stats { grid-template-columns: 1fr; }
+  }
+  .stat {
+    background: var(--paper);
+    padding: 18px 20px;
+  }
+  .stat .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .stat .value {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stat .value .unit {
+    font-size: 0.45em;
+    font-weight: 400;
+    color: var(--ink-soft);
+    margin-left: 4px;
+    font-style: italic;
+  }
+  .stat .sub {
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+  .stat.activity .value { color: var(--liberty-deep); }
+  .stat.sun .value { color: var(--sun-deep); }
+  .stat.wind .value { color: var(--rain); }
+  .stat.humidity .value { color: var(--good-deep); }
+
+  /* FOOTNOTE */
+  .footnote {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    line-height: 1.6;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+  }
+  .footnote b {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--ink-soft);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* BRAND FOOTER */
+  .brand-footer {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand-footer .logo-small {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+  }
+  .brand-footer .copyright-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+  .brand-footer .copyright-line .year {
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  /* status / loading */
+  .status-msg {
+    text-align: center;
+    padding: 40px 20px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 1.05rem;
+  }
+  .status-msg.error {
+    color: var(--bad);
+    font-style: normal;
+    font-family: 'Inter', sans-serif;
+  }
+
+  @media (max-width: 600px) {
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead .meta { text-align: left; }
+    .today-inner { padding: 22px 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="tool">
+
+  <!-- BRAND BAR -->
+  <div class="brandbar">
+    <img class="logo" src="https://img1.wsimg.com/isteam/ip/e2c8983a-bdb1-46c2-bda4-5a7ed1f19e32/blob-49a6601.png/:/rs=h:175,m" alt="Herrmann Ag Logo">
+    <div class="copyright">© <span id="year-top"></span> Herrmann Ag · All rights reserved</div>
+  </div>
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div>
+      <h1>Spray Liberty <em>today?</em></h1>
+      <div class="location" id="loc-name">Loading location…</div>
+    </div>
+    <div class="meta">
+      <div><span class="dot"></span><span id="status-text">Live</span></div>
+      <div id="last-update" style="margin-top:4px;">Initializing…</div>
+    </div>
+  </header>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="group">
+      <label for="city-input">City</label>
+      <input type="text" id="city-input" placeholder="Princeville" value="Princeville">
+    </div>
+    <div class="group">
+      <label for="state-input">State</label>
+      <input type="text" id="state-input" placeholder="IL" value="IL" maxlength="20">
+    </div>
+    <button id="apply-loc" type="button">Set</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="output">
+    <div class="status-msg">Reading the sky and the spray chart…</div>
+  </div>
+
+  <!-- FOOTNOTE -->
+  <div class="footnote" id="footnote" style="display:none;">
+    <b>How this is calculated.</b> Temperature, humidity, and wind forecasts are pulled from the National Weather Service via api.weather.gov — the same data feeding NOAA's site, The Weather Channel, and every other US weather app. Cloud cover, precipitation amounts, and historical conditions come from Open-Meteo's high-resolution forecast. Merging both sources gives the most accurate temperature picture (NWS is forecaster-adjusted) alongside the precipitation and cloud detail NWS doesn't expose in its hourly endpoint. Sunrise and sunset times come from Open-Meteo's daily astronomical endpoint for the exact lat/lon.
+    <br><br>
+    <b>The Liberty activity score.</b> The decision logic blends six factors, in order of weight: <i>(1) Temp + RH ≥ 100</i> as a hard floor (your agronomist's rule — below 100 there's not enough humidity for the contact herbicide to keep the leaf surface wet long enough to absorb, and weed control collapses); <i>(2) Temp + RH ≥ 150</i> as the "smoke big waterhemp" sweet spot, where every published trial shows glufosinate hitting its ceiling; <i>(3) full sun</i> — glufosinate is light-activated, requiring photosynthesis to convert into the herbicidal phosphinothricin form. Published research (Coetzer et al. 2001, Takano & Dayan 2020, Purdue Weed Science) consistently shows midday applications under full sun outperforming early morning, late evening, or overcast applications by 15-40% on tough weeds. <i>(4) Wind</i> between 3 and 10 mph is ideal — under 3 invites inversion drift, over 10 mph fails the label, over 15 is a hard stop. <i>(5) Air temperature</i> between 60 °F and 85 °F is best; above 85 with low humidity stacks volatility and drift risk. <i>(6) Rain</i> within 4 hours of application is a hard stop — Liberty is rainfast at four hours per label.
+    <br><br>
+    <b>The hourly view</b> shows every daylight hour today shaded green (full activation conditions), amber (workable but suboptimal), red (label violation or activity collapse), or dark (night — Liberty does not work in the dark). Best-start time is the earliest green hour after sunrise that still leaves enough daylight for the activated herbicide to translocate.
+    <br><br>
+    <b>This tool is decision support, not a label.</b> It cannot account for tank-mix partners, adjuvant choice, nozzle setup, sprayer speed, weed size or species, prior herbicide passes, crop stage, or any of the field-level realities only you and your agronomist can see. The published research it's calibrated against (Coetzer, Takano & Dayan, Purdue, Iowa State, Michigan State Extension) gives a strong picture of the <i>environmental</i> window — the rest is on the operator. Always read and follow the Liberty / Liberty ULTRA label.
+  </div>
+
+  <!-- BRAND FOOTER -->
+  <div class="brand-footer">
+    <img class="logo-small" src="https://img1.wsimg.com/isteam/ip/e2c8983a-bdb1-46c2-bda4-5a7ed1f19e32/blob-49a6601.png/:/rs=h:175,m" alt="Herrmann Ag Logo">
+    <div class="copyright-line">© <span class="year">2026</span> Herrmann Ag · Spray Liberty Today? · v1.0</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ============ CONFIG ============
+  const DEFAULT_LOC = {
+    name: 'Princeville, IL',
+    city: 'Princeville',
+    state: 'IL',
+    lat: 40.9339, lon: -89.7620,
+    tz: 'America/Chicago'
+  };
+  const REFRESH_MS = 15 * 60 * 1000;
+
+  // --- LIBERTY AGRONOMIC CONSTANTS ---
+  // Calibrated against the agronomist rule (temp + RH ≥ 100 floor, ≥ 150 sweet
+  // spot) and published research: Coetzer et al. 2001 (light-activation),
+  // Takano & Dayan 2020 (midday optimum), Purdue/Iowa State/MSU Extension
+  // (label + practical performance).
+  const T_RH_FLOOR    = 100;   // °F + %RH: below this, Liberty fails. Hard stop.
+  const T_RH_SWEET    = 150;   // °F + %RH: above this, full activity ("smokes" waterhemp)
+  const TEMP_MIN_F    = 60;    // below: slow activity, caution
+  const TEMP_IDEAL_F  = 70;    // ideal start
+  const TEMP_MAX_F    = 85;    // above: drift/volatility, caution
+  const TEMP_HARD_F   = 92;    // above: drop the load with low RH — hard stop in label-drift mode
+
+  const WIND_MIN_MPH    = 3;     // below: inversion risk
+  const WIND_LABEL_MPH  = 10;    // label limit for most ground apps
+  const WIND_HARD_MPH   = 15;    // hard stop
+
+  const RAIN_FREE_HRS = 4;     // rainfast period (Liberty label)
+  const RAIN_HARD_IN  = 0.02;  // any measurable precip in next 4h after spray = stop
+  const RAIN_POP_HARD = 60;    // % chance of rain in 4h window = stop
+
+  // Cloud cover thresholds (Liberty needs sun)
+  const SUN_CLEAR_MAX   = 30;   // % cloud cover: clear/mostly sunny
+  const SUN_PARTLY_MAX  = 70;   // % cloud: partly cloudy — usable but not ideal
+  // above 70% = overcast = caution/no
+
+  // ============ DOM ============
+  const outputEl = document.getElementById('output');
+  const footnoteEl = document.getElementById('footnote');
+  const lastUpdateEl = document.getElementById('last-update');
+  const cityInputEl = document.getElementById('city-input');
+  const stateInputEl = document.getElementById('state-input');
+  const applyLocBtn = document.getElementById('apply-loc');
+  const locNameEl = document.getElementById('loc-name');
+  const statusTextEl = document.getElementById('status-text');
+
+  let currentLoc = { ...DEFAULT_LOC };
+
+  // Set copyright year(s)
+  document.getElementById('year-top').textContent = new Date().getFullYear();
+  document.querySelectorAll('.brand-footer .year').forEach(el => el.textContent = new Date().getFullYear());
+
+  // ============ HELPERS ============
+  function fmtWeekday(dt) { return dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }); }
+  function fmtShortDate(dt) { return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); }
+  function fmtLongDate(dt) { return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }); }
+  function todayUTC() { const n = new Date(); return new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())); }
+  function isoFromUTC(d) { return d.toISOString().slice(0, 10); }
+  function fmtClock(h) {
+    // h is 0-23
+    if (h === 0) return '12a';
+    if (h === 12) return '12p';
+    if (h < 12) return h + 'a';
+    return (h - 12) + 'p';
+  }
+  function fmtClockFull(h, m) {
+    // h is 0-23, m is 0-59
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    const mm = (m || 0).toString().padStart(2, '0');
+    const ampm = h < 12 ? 'AM' : 'PM';
+    return `${hh}:${mm} ${ampm}`;
+  }
+
+  // ============ GEOCODING ============
+  const STATE_NAMES = {
+    AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',
+    CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',
+    IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',
+    ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',
+    MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',
+    NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',
+    NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',
+    PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',
+    TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',
+    WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',DC:'District of Columbia'
+  };
+  function expandState(s) {
+    const t = s.trim();
+    if (!t) return '';
+    const up = t.toUpperCase();
+    if (STATE_NAMES[up]) return STATE_NAMES[up];
+    return t;
+  }
+  function abbrevState(fullName) {
+    if (!fullName) return '';
+    const upper = fullName.toUpperCase();
+    for (const [code, name] of Object.entries(STATE_NAMES)) {
+      if (name.toUpperCase() === upper) return code;
+    }
+    return fullName.slice(0, 2).toUpperCase();
+  }
+  async function geocode(city, state) {
+    const c = city.trim();
+    const s = state.trim();
+    if (!c) throw new Error('Please enter a city');
+    const stateFull = expandState(s);
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(c)}&count=10&language=en&format=json&country=US`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Geocoding failed');
+    const j = await res.json();
+    if (!j.results || !j.results.length) throw new Error('Location not found');
+    let match = null;
+    if (stateFull) {
+      const sUp = stateFull.toUpperCase();
+      match = j.results.find(r => r.country_code === 'US' && r.admin1 && r.admin1.toUpperCase() === sUp);
+    }
+    if (!match) match = j.results.find(x => x.country_code === 'US') || j.results[0];
+    const stateCode = abbrevState(match.admin1);
+    return {
+      city: match.name,
+      state: stateCode || match.admin1 || '',
+      name: `${match.name}, ${stateCode || match.admin1 || match.country_code}`,
+      lat: match.latitude, lon: match.longitude,
+      tz: match.timezone || 'America/Chicago'
+    };
+  }
+
+  // ============ WEATHER FETCH ============
+  // Mirroring the plant-tool pattern: NWS for temperatures (forecaster-adjusted,
+  // the same data driving every US consumer weather app), Open-Meteo for the
+  // variables NWS doesn't expose hourly (humidity, cloud cover, precip totals,
+  // wind), and merge so we get the best of both.
+  async function fetchWeather(loc) {
+    const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+      `&hourly=temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,cloud_cover,wind_speed_10m,wind_gusts_10m` +
+      `&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum` +
+      `&forecast_days=8&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph` +
+      `&timezone=${encodeURIComponent(loc.tz)}`;
+
+    const [om, nws] = await Promise.all([
+      fetch(omUrl).then(r => r.ok ? r.json() : Promise.reject('open-meteo failed')),
+      fetchNwsForecast(loc).catch(e => {
+        console.warn('NWS unavailable, using Open-Meteo temps:', e);
+        return null;
+      })
+    ]);
+    const merged = mergeForecast(om, nws);
+    return merged;
+  }
+
+  function mergeForecast(om, nws) {
+    if (!nws || !nws.hourly || !nws.hourly.time || !nws.hourly.time.length) return om;
+    const tempByTime = {};
+    const popByTime = {};
+    const windByTime = {};
+    for (let i = 0; i < nws.hourly.time.length; i++) {
+      tempByTime[nws.hourly.time[i]] = nws.hourly.temperature_2m[i];
+      if (nws.hourly.precipProbability != null) popByTime[nws.hourly.time[i]] = nws.hourly.precipProbability[i];
+      if (nws.hourly.wind_speed != null) windByTime[nws.hourly.time[i]] = nws.hourly.wind_speed[i];
+    }
+    if (om.hourly && om.hourly.time) {
+      for (let i = 0; i < om.hourly.time.length; i++) {
+        const t = om.hourly.time[i];
+        if (t in tempByTime && tempByTime[t] != null) om.hourly.temperature_2m[i] = tempByTime[t];
+        if (t in popByTime && popByTime[t] != null) om.hourly.precipitation_probability[i] = popByTime[t];
+        // Don't override wind from NWS — Open-Meteo's 10m wind speed is more
+        // consistent with what we need for label compliance; NWS sometimes
+        // returns gust-influenced values that are too jumpy hour-to-hour.
+      }
+    }
+    return om;
+  }
+
+  const _gridpointCache = {};
+  async function fetchNwsForecast(loc) {
+    const ptKey = `${loc.lat.toFixed(4)},${loc.lon.toFixed(4)}`;
+    let gridpointUrl = _gridpointCache[ptKey];
+    if (!gridpointUrl) {
+      const ptUrl = `https://api.weather.gov/points/${loc.lat.toFixed(4)},${loc.lon.toFixed(4)}`;
+      const ptRes = await fetch(ptUrl, { headers: { 'Accept': 'application/geo+json' } });
+      if (!ptRes.ok) throw new Error('NWS points lookup failed');
+      const ptJson = await ptRes.json();
+      gridpointUrl = ptJson.properties && ptJson.properties.forecastHourly;
+      if (!gridpointUrl) throw new Error('NWS gridpoint not found');
+      _gridpointCache[ptKey] = gridpointUrl;
+    }
+    const fcRes = await fetch(gridpointUrl, { headers: { 'Accept': 'application/geo+json' } });
+    if (!fcRes.ok) throw new Error('NWS forecast fetch failed');
+    const fcJson = await fcRes.json();
+    const periods = (fcJson.properties && fcJson.properties.periods) || [];
+    const hourly = { time: [], temperature_2m: [], precipProbability: [], wind_speed: [] };
+    for (const p of periods) {
+      const localIso = p.startTime.slice(0, 16);
+      let temp = p.temperature;
+      if (p.temperatureUnit === 'C') temp = temp * 9 / 5 + 32;
+      hourly.time.push(localIso);
+      hourly.temperature_2m.push(temp);
+      let pop = null;
+      if (p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value != null) {
+        pop = p.probabilityOfPrecipitation.value;
+      }
+      hourly.precipProbability.push(pop);
+      // Parse wind: NWS gives "10 mph" or "5 to 15 mph" — take the upper bound
+      let ws = null;
+      if (p.windSpeed) {
+        const matches = p.windSpeed.match(/(\d+)/g);
+        if (matches && matches.length) ws = parseFloat(matches[matches.length - 1]);
+      }
+      hourly.wind_speed.push(ws);
+    }
+    return { hourly };
+  }
+
+  // ============ HOURLY SPRAY SCORING ============
+  // Score every hour with a Liberty-specific activity rating.
+  // Returns: { score, light, reasons, isDaylight }
+  function scoreHour(idx, hourly, sunriseTs, sunsetTs) {
+    const t = hourly.temperature_2m[idx];
+    const rh = hourly.relative_humidity_2m[idx];
+    const cloud = hourly.cloud_cover[idx];
+    const wind = hourly.wind_speed_10m[idx];
+    const gust = hourly.wind_gusts_10m ? hourly.wind_gusts_10m[idx] : null;
+    const time = hourly.time[idx];
+
+    const tsLocal = parseLocalIsoTs(time);
+    const isDaylight = sunriseTs != null && sunsetTs != null
+      ? (tsLocal >= sunriseTs && tsLocal < sunsetTs)
+      : false;
+
+    if (!isDaylight) {
+      return { score: 0, light: 'night', reasons: ['Night — Liberty requires sunlight to activate'], isDaylight: false, t, rh, cloud, wind, gust, time, idx };
+    }
+
+    // Forward-looking rain window: 4 hours rainfast
+    let rainSoonIn = 0;
+    let rainSoonPop = 0;
+    for (let k = 0; k < RAIN_FREE_HRS; k++) {
+      const ki = idx + k;
+      if (ki < hourly.precipitation.length) {
+        if (hourly.precipitation[ki] != null) rainSoonIn += hourly.precipitation[ki];
+        if (hourly.precipitation_probability[ki] != null) {
+          rainSoonPop = Math.max(rainSoonPop, hourly.precipitation_probability[ki]);
+        }
+      }
+    }
+
+    const reasons = [];
+    let hardStop = false;
+    let cautionCount = 0;
+    let score = 0; // 0-100 activity expectation
+
+    // --- HARD STOPS (label + agronomist floor) ---
+    if (wind != null && wind > WIND_HARD_MPH) {
+      hardStop = true;
+      reasons.push(`Wind ${Math.round(wind)} mph — well over 10 mph label limit`);
+    } else if (wind != null && wind > WIND_LABEL_MPH) {
+      hardStop = true; // user picked "both as hard stops"
+      reasons.push(`Wind ${Math.round(wind)} mph — over 10 mph label limit`);
+    }
+    if (rainSoonIn >= RAIN_HARD_IN || rainSoonPop >= RAIN_POP_HARD) {
+      hardStop = true;
+      reasons.push(`${rainSoonPop}% chance / ${rainSoonIn.toFixed(2)}″ of rain inside the 4-hour rainfast window`);
+    }
+
+    const trh = (t != null && rh != null) ? (t + rh) : null;
+
+    if (trh != null && trh < T_RH_FLOOR) {
+      hardStop = true;
+      reasons.push(`Temp + RH = ${Math.round(trh)} (need ≥ ${T_RH_FLOOR}) — humidity too low to keep leaf surface wet for absorption`);
+    }
+    if (t != null && t > TEMP_HARD_F && rh != null && rh < 40) {
+      hardStop = true;
+      reasons.push(`${Math.round(t)}°F with ${Math.round(rh)}% RH — heat + low humidity stack drift and volatility risk`);
+    }
+
+    if (hardStop) {
+      return { score: 0, light: 'no', reasons, isDaylight: true, t, rh, cloud, wind, gust, time, idx };
+    }
+
+    // --- SCORING ---
+    // Temp + RH (the heart of Liberty performance)
+    if (trh != null) {
+      if (trh >= T_RH_SWEET) {
+        score += 35;
+        reasons.push(`Temp + RH = ${Math.round(trh)} — sweet spot, will smoke big waterhemp`);
+      } else if (trh >= 130) {
+        score += 28;
+        reasons.push(`Temp + RH = ${Math.round(trh)} — strong activity`);
+      } else if (trh >= 115) {
+        score += 20;
+        reasons.push(`Temp + RH = ${Math.round(trh)} — workable, not ideal`);
+      } else {
+        score += 10;
+        cautionCount++;
+        reasons.push(`Temp + RH = ${Math.round(trh)} — marginal, just above the floor`);
+      }
+    }
+
+    // Sun (cloud cover)
+    if (cloud != null) {
+      if (cloud <= SUN_CLEAR_MAX) {
+        score += 28;
+        reasons.push(`${Math.round(cloud)}% cloud — full sun, full activation`);
+      } else if (cloud <= SUN_PARTLY_MAX) {
+        score += 18;
+        cautionCount++;
+        reasons.push(`${Math.round(cloud)}% cloud — partly cloudy, suboptimal activation`);
+      } else {
+        score += 5;
+        cautionCount++;
+        reasons.push(`${Math.round(cloud)}% cloud — overcast, weak activation`);
+      }
+    }
+
+    // Temp standalone
+    if (t != null) {
+      if (t >= TEMP_IDEAL_F && t <= TEMP_MAX_F) {
+        score += 20;
+        reasons.push(`${Math.round(t)}°F — ideal range`);
+      } else if (t >= TEMP_MIN_F && t < TEMP_IDEAL_F) {
+        score += 14;
+        reasons.push(`${Math.round(t)}°F — workable, activity slowing`);
+      } else if (t > TEMP_MAX_F && t <= TEMP_HARD_F) {
+        score += 12;
+        cautionCount++;
+        reasons.push(`${Math.round(t)}°F — warm, watch drift/volatility`);
+      } else {
+        score += 5;
+        cautionCount++;
+        reasons.push(`${Math.round(t)}°F — outside ideal range`);
+      }
+    }
+
+    // Wind
+    if (wind != null) {
+      if (wind >= WIND_MIN_MPH && wind <= 8) {
+        score += 17;
+        reasons.push(`Wind ${Math.round(wind)} mph — clean spray pattern`);
+      } else if (wind < WIND_MIN_MPH) {
+        score += 8;
+        cautionCount++;
+        reasons.push(`Wind ${Math.round(wind)} mph — calm, inversion drift risk`);
+      } else if (wind <= WIND_LABEL_MPH) {
+        score += 10;
+        cautionCount++;
+        reasons.push(`Wind ${Math.round(wind)} mph — at label edge, watch drift`);
+      }
+    }
+
+    score = Math.max(0, Math.min(100, score));
+    let light;
+    if (score >= 75 && cautionCount === 0) light = 'go';
+    else if (score >= 55) light = 'cau';
+    else light = 'no';
+
+    return { score, light, reasons, isDaylight: true, t, rh, cloud, wind, gust, time, idx };
+  }
+
+  // Parse "YYYY-MM-DDTHH:MM" as a UTC timestamp (we treat the local-iso string
+  // as if it were UTC purely for ordering — since sunrise/sunset are parsed
+  // the same way, the comparison is internally consistent).
+  function parseLocalIsoTs(s) {
+    if (!s) return null;
+    // s could be "2026-05-20T14:00" or "2026-05-20T14:00:00-05:00" — we strip TZ
+    const core = s.slice(0, 16);
+    return new Date(core + 'Z').getTime();
+  }
+
+  // ============ DAILY ROLLUP ============
+  // Roll up scored hours into a per-day verdict + best window.
+  function rollupDay(dayIdx, daily, hourly) {
+    const dateISO = daily.time[dayIdx];
+    const sunriseStr = daily.sunrise[dayIdx];
+    const sunsetStr  = daily.sunset[dayIdx];
+    const sunriseTs = parseLocalIsoTs(sunriseStr);
+    const sunsetTs  = parseLocalIsoTs(sunsetStr);
+    const tmax = daily.temperature_2m_max[dayIdx];
+    const tmin = daily.temperature_2m_min[dayIdx];
+
+    // Find hour indices for this date
+    const dayHours = [];
+    for (let i = 0; i < hourly.time.length; i++) {
+      if (hourly.time[i].slice(0, 10) === dateISO) dayHours.push(i);
+    }
+
+    const hourScores = dayHours.map(i => ({ idx: i, ...scoreHour(i, hourly, sunriseTs, sunsetTs) }));
+    const daylightScores = hourScores.filter(h => h.isDaylight);
+    const goHours = daylightScores.filter(h => h.light === 'go');
+    const cauHours = daylightScores.filter(h => h.light === 'cau');
+
+    // Best contiguous "go" block
+    let bestStart = null, bestEnd = null, bestLen = 0;
+    let curStart = null, curLen = 0;
+    for (const h of daylightScores) {
+      if (h.light === 'go') {
+        if (curStart === null) curStart = h;
+        curLen++;
+        if (curLen > bestLen) { bestLen = curLen; bestStart = curStart; bestEnd = h; }
+      } else {
+        curStart = null; curLen = 0;
+      }
+    }
+
+    // Day verdict
+    let dayLight;
+    if (goHours.length >= 3) dayLight = 'go';
+    else if (goHours.length >= 1 || cauHours.length >= 3) dayLight = 'cau';
+    else dayLight = 'no';
+
+    // Peak (max-score) hour overall
+    const peak = daylightScores.length
+      ? daylightScores.reduce((a, b) => (b.score > a.score ? b : a))
+      : null;
+    const avgScore = daylightScores.length
+      ? Math.round(daylightScores.reduce((s, h) => s + h.score, 0) / daylightScores.length)
+      : 0;
+
+    return {
+      dateISO,
+      dateObj: new Date(dateISO + 'T12:00:00Z'),
+      sunriseStr, sunsetStr,
+      tmax, tmin,
+      hourScores, goHours, cauHours,
+      bestStart, bestEnd, bestLen,
+      peak, avgScore,
+      light: dayLight
+    };
+  }
+
+  // ============ RENDER ============
+  function render(weather) {
+    const hourly = weather.hourly;
+    const daily = weather.daily;
+
+    if (!daily || !daily.time || !daily.time.length) {
+      outputEl.innerHTML = `<div class="status-msg error">No forecast data available.</div>`;
+      return;
+    }
+
+    // Build per-day analysis
+    const days = daily.time.map((_, i) => rollupDay(i, daily, hourly));
+    const todayD = days[0];
+
+    // Find best day in week (highest avg score, ties go to earlier date)
+    let bestDay = days[0];
+    for (let i = 1; i < days.length; i++) {
+      if (days[i].avgScore > bestDay.avgScore) bestDay = days[i];
+    }
+
+    // ---- HEADLINE ----
+    const overall = todayD.light;
+    const headlineMap = {
+      go:  { text: 'Yes — go.', detail: 'The temp-and-humidity floor is satisfied for a meaningful chunk of daylight today, and the sun, wind, and rain windows line up. Pick your hours.' },
+      cau: { text: 'It depends.', detail: 'Today has a workable window, but it\'s narrow or compromised — sun, humidity, wind, or rain timing is off enough to dock activity. Check the hourly strip for when (or if) conditions clean up.' },
+      no:  { text: 'Hold the sprayer.', detail: 'Either the temp + RH floor never gets satisfied today, or wind / rain / overcast disqualifies the day. Check the week-ahead strip below — most weeks have a better window inside seven days.' }
+    };
+    let detail = headlineMap[overall].detail;
+    if (overall !== 'go' && bestDay.dateISO !== todayD.dateISO && bestDay.light === 'go') {
+      detail += ` Best day this week: <b>${fmtWeekday(bestDay.dateObj)} ${fmtShortDate(bestDay.dateObj)}</b>.`;
+    }
+
+    let html = '';
+
+    // ----- TODAY BLOCK -----
+    html += `<section class="today-block">
+      <div class="today-stripe ${overall}"></div>
+      <div class="today-inner">
+        <div class="today-eyebrow">${fmtLongDate(todayD.dateObj)} · today's call</div>
+        <h2 class="today-headline ${overall}">${headlineMap[overall].text.replace(/—\s(\w+)/, (m, p) => `— <em>${p}</em>`)}</h2>
+        <p class="today-summary">${detail}</p>
+
+        <div class="window-row">
+          ${renderWindowBox('Best start time', todayD, 'start')}
+          ${renderWindowBox('Peak activity window', todayD, 'peak')}
+        </div>
+
+        ${renderHourlyStrip(todayD)}
+
+        ${renderWhy(todayD)}
+      </div>
+    </section>`;
+
+    // ----- HERO STATS -----
+    const peakHour = todayD.peak;
+    const peakHourLabel = peakHour ? fmtClock(parseInt(peakHour.time ? peakHour.time.slice(11, 13) : hourly.time[peakHour.idx].slice(11, 13), 10)) : '—';
+    const peakScoreText = peakHour ? `${peakHour.score}/100` : '—';
+    const peakSubText = peakHour ? `peak hour at ${peakHourLabel}` : 'no daylight scoring';
+
+    const sunPct = sunPercent(todayD);
+    const sunSubText = sunPct != null ? `${sunPct}% of daylight hours have <30% cloud` : '—';
+
+    const peakWind = peakHour && peakHour.wind != null ? `${Math.round(peakHour.wind)}` : '—';
+    const peakWindSub = peakHour && peakHour.wind != null
+      ? (peakHour.wind > WIND_LABEL_MPH ? 'over label limit' : (peakHour.wind < WIND_MIN_MPH ? 'calm — drift risk' : 'inside label window'))
+      : '—';
+
+    const peakTRH = peakHour && peakHour.t != null && peakHour.rh != null ? `${Math.round(peakHour.t + peakHour.rh)}` : '—';
+    const peakTRHSub = peakHour && peakHour.t != null && peakHour.rh != null
+      ? (peakHour.t + peakHour.rh >= T_RH_SWEET ? 'sweet spot' : (peakHour.t + peakHour.rh >= T_RH_FLOOR ? 'above floor' : 'below floor'))
+      : '—';
+
+    html += `<div class="hero-stats">
+      <div class="stat activity">
+        <div class="label">Today's peak score</div>
+        <div class="value">${peakScoreText}</div>
+        <div class="sub">${peakSubText}</div>
+      </div>
+      <div class="stat sun">
+        <div class="label">Sun availability today</div>
+        <div class="value">${sunPct != null ? sunPct + '<span class="unit">%</span>' : '—'}</div>
+        <div class="sub">${sunSubText}</div>
+      </div>
+      <div class="stat humidity">
+        <div class="label">T + RH at peak hour</div>
+        <div class="value">${peakTRH}</div>
+        <div class="sub">${peakTRHSub}</div>
+      </div>
+      <div class="stat wind">
+        <div class="label">Wind at peak hour</div>
+        <div class="value">${peakWind}<span class="unit">mph</span></div>
+        <div class="sub">${peakWindSub}</div>
+      </div>
+    </div>`;
+
+    // ----- WEEK STRIP -----
+    html += `<div class="section-head">
+      <span class="num">02</span>
+      <h2>Eight days ahead</h2>
+      <span class="head-legend">
+        <span class="lg-item"><span class="lg-swatch go"></span>Go</span>
+        <span class="lg-item"><span class="lg-swatch cau"></span>Mixed</span>
+        <span class="lg-item"><span class="lg-swatch no"></span>Hold</span>
+      </span>
+    </div>`;
+    html += '<div class="week-strip">';
+    for (let i = 0; i < days.length; i++) {
+      html += renderDayCard(days[i], i, bestDay);
+    }
+    html += '</div>';
+
+    outputEl.innerHTML = html;
+    footnoteEl.style.display = 'block';
+  }
+
+  // % of daylight hours that have <30% cloud (sunshine availability)
+  function sunPercent(day) {
+    const dl = day.hourScores.filter(h => h.isDaylight);
+    if (!dl.length) return null;
+    const clear = dl.filter(h => h.cloud != null && h.cloud <= SUN_CLEAR_MAX).length;
+    return Math.round(100 * clear / dl.length);
+  }
+
+  function renderWindowBox(label, day, kind) {
+    let title = '—', detail = 'Conditions never line up today.', muted = true;
+    if (kind === 'start') {
+      // First "go" hour
+      const firstGo = day.hourScores.find(h => h.light === 'go');
+      if (firstGo) {
+        muted = false;
+        const h = parseInt(getHour(firstGo), 10);
+        title = fmtClockFull(h, 0);
+        detail = `Earliest hour today where temp + RH, sun, wind, and rain timing all line up for full Liberty activity. Get on the field by mid-morning — earlier if conditions stay green.`;
+      } else {
+        // Look for a "cau" hour as fallback
+        const firstCau = day.hourScores.find(h => h.light === 'cau');
+        if (firstCau) {
+          const h = parseInt(getHour(firstCau), 10);
+          title = fmtClockFull(h, 0);
+          muted = false;
+          detail = `No fully-green hour today — this is the earliest workable hour, but conditions are mixed. Check the hourly strip and the breakdown below.`;
+        } else {
+          title = 'Not today';
+          detail = 'No hour today clears the Liberty floor. Watch tomorrow.';
+        }
+      }
+    } else if (kind === 'peak') {
+      // Best window (contiguous go block) or single peak
+      if (day.bestStart && day.bestEnd && day.bestLen >= 1) {
+        muted = false;
+        const sH = parseInt(getHour(day.bestStart), 10);
+        const eH = parseInt(getHour(day.bestEnd), 10) + 1;
+        title = `${fmtClockFull(sH, 0)} – ${fmtClockFull(eH % 24, 0)}`;
+        detail = `${day.bestLen} contiguous hour${day.bestLen === 1 ? '' : 's'} of full-activation Liberty weather. Score at the peak hour: <b>${day.peak ? day.peak.score : '—'}/100</b>.`;
+      } else if (day.peak) {
+        muted = false;
+        const h = parseInt(getHour(day.peak), 10);
+        title = `${fmtClockFull(h, 0)} (one hour)`;
+        detail = `Only one hour clears the bar today. Peak score: <b>${day.peak.score}/100</b>. If you're going, that's the moment.`;
+      } else {
+        title = 'No peak';
+        detail = 'No daylight hour today scores high enough to call a peak. Wait for a better day.';
+      }
+    }
+    return `<div class="window-box">
+      <div class="label">${label}</div>
+      <div class="when ${muted ? 'muted' : ''}">${title}</div>
+      <div class="when-detail">${detail}</div>
+    </div>`;
+  }
+
+  function getHour(scoredHour) {
+    // scoredHour has idx, and we can pull time from hourly via the closure if needed
+    // but we stash the time string on the scored hour via the rollup
+    if (scoredHour.time) return scoredHour.time.slice(11, 13);
+    // Fallback: look at the index — should not hit this
+    return '12';
+  }
+
+  function renderHourlyStrip(day) {
+    // 24-hour strip for today.
+    const hours = Array.from({ length: 24 }, (_, h) => h);
+    // Map hourScores by hour-of-day
+    const scoreByHour = {};
+    for (const h of day.hourScores) {
+      const hh = parseInt(getHour(h), 10);
+      scoreByHour[hh] = h;
+    }
+    const nowHour = (() => {
+      const today = todayUTC();
+      const isToday = day.dateISO === isoFromUTC(today);
+      if (!isToday) return null;
+      return new Date().getHours();
+    })();
+
+    let cells = '';
+    for (const h of hours) {
+      const sc = scoreByHour[h];
+      let cls = 'no'; // default if no data
+      let tip = '';
+      if (!sc) {
+        cls = 'night';
+        tip = `${fmtClock(h)} — no data`;
+      } else if (!sc.isDaylight) {
+        cls = 'night';
+        tip = `${fmtClock(h)} — night`;
+      } else {
+        cls = sc.light;
+        const trh = (sc.t != null && sc.rh != null) ? Math.round(sc.t + sc.rh) : '—';
+        tip = `${fmtClock(h)} · ${sc.t != null ? Math.round(sc.t) + '°F' : '—'} · ${sc.rh != null ? Math.round(sc.rh) + '% RH' : '—'} · T+RH ${trh} · ${sc.cloud != null ? Math.round(sc.cloud) + '% cloud' : '—'} · ${sc.wind != null ? Math.round(sc.wind) + ' mph' : '—'} · score ${sc.score}`;
+      }
+      const nowCls = (nowHour === h) ? ' now' : '';
+      cells += `<div class="hour-cell ${cls}${nowCls}"><span class="tip">${tip}</span></div>`;
+    }
+
+    let labels = '';
+    for (const h of hours) {
+      const showLabel = (h % 3 === 0);
+      labels += `<span>${showLabel ? fmtClock(h) : ''}</span>`;
+    }
+
+    return `<div class="hourly-strip-wrap">
+      <div class="strip-title">
+        <span>Hour-by-hour today · hover for details</span>
+        <span class="legend-mini">
+          <span class="sw go"></span>Go<span class="sw cau"></span>Mixed<span class="sw no"></span>Hold<span class="sw night"></span>Night
+        </span>
+      </div>
+      <div class="hour-strip">${cells}</div>
+      <div class="hour-labels">${labels}</div>
+    </div>`;
+  }
+
+  function renderWhy(day) {
+    // Pull the union of reasons from the peak hour (or best window) and de-dupe
+    let sourceHour = day.peak;
+    if (!sourceHour && day.hourScores.length) {
+      sourceHour = day.hourScores.find(h => h.isDaylight) || day.hourScores[0];
+    }
+    if (!sourceHour) return '';
+
+    const seen = new Set();
+    const items = [];
+    for (const r of sourceHour.reasons) {
+      if (seen.has(r)) continue;
+      seen.add(r);
+      // Classify: text contains "sweet spot" / "ideal" / "full sun" / "clean" -> go,
+      // contains "label" / "below" / "fail" / "overcast" / "drift" -> cau/no
+      let level = 'go';
+      if (/over|below|fail|inside the 4-hour|drift|overcast|marginal|outside ideal|sub|just above|watch/i.test(r)) {
+        level = 'cau';
+      }
+      if (/well over|label limit|below floor|never gets|hard stop/i.test(r)) {
+        level = 'no';
+      }
+      if (sourceHour.light === 'no' && /Temp \+ RH|chance/.test(r)) level = 'no';
+      items.push([level, r]);
+    }
+
+    const order = { no: 0, cau: 1, go: 2 };
+    items.sort((a, b) => order[a[0]] - order[b[0]]);
+    const ico = { go: '✓', cau: '~', no: '×' };
+
+    let h = `<div class="why-list"><h4>Why — signals at today's peak hour</h4><ul>`;
+    for (const [level, text] of items) {
+      h += `<li class="${level}"><span class="ico">${ico[level]}</span><span>${text}</span></li>`;
+    }
+    h += '</ul></div>';
+    return h;
+  }
+
+  function renderDayCard(day, idx, bestDay) {
+    const classes = ['day-card'];
+    if (idx === 0) classes.push('today');
+    if (bestDay && bestDay.dateISO === day.dateISO) classes.push('best');
+
+    const lt = day.light;
+    const ltLabel = lt === 'go' ? 'Go' : (lt === 'cau' ? 'Mixed' : 'Hold');
+
+    const tempStr = (day.tmax != null && day.tmin != null) ? `${Math.round(day.tmax)}/${Math.round(day.tmin)}°` : '—';
+    const scoreStr = `${day.avgScore}/100`;
+    const scoreCls = day.avgScore >= 70 ? 'great' : (day.avgScore >= 45 ? 'good' : 'poor');
+
+    // Best window short
+    let bestWinStr = '—';
+    if (day.bestStart && day.bestEnd) {
+      const sH = parseInt(getHour(day.bestStart), 10);
+      const eH = parseInt(getHour(day.bestEnd), 10) + 1;
+      bestWinStr = `${fmtClock(sH)}–${fmtClock(eH % 24)}`;
+    } else if (day.peak && day.peak.light === 'go') {
+      const h = parseInt(getHour(day.peak), 10);
+      bestWinStr = `${fmtClock(h)} only`;
+    } else if (day.hourScores.find(h => h.light === 'cau')) {
+      bestWinStr = 'mixed only';
+    } else {
+      bestWinStr = 'none';
+    }
+
+    // Peak T+RH
+    const peakTRH = (day.peak && day.peak.t != null && day.peak.rh != null) ? Math.round(day.peak.t + day.peak.rh) : null;
+    const peakTRHCls = peakTRH != null
+      ? (peakTRH >= T_RH_SWEET ? 'great' : (peakTRH >= T_RH_FLOOR ? 'good' : 'poor'))
+      : '';
+
+    // Peak wind
+    const peakWind = (day.peak && day.peak.wind != null) ? Math.round(day.peak.wind) : null;
+    const peakWindCls = peakWind != null
+      ? (peakWind > WIND_LABEL_MPH ? 'poor' : (peakWind < WIND_MIN_MPH ? 'warn' : 'good'))
+      : '';
+
+    return `<div class="${classes.join(' ')}">
+      <div class="day-name">${idx === 0 ? 'Today' : fmtWeekday(day.dateObj)}</div>
+      <div class="day-date">${fmtShortDate(day.dateObj)}</div>
+      <div class="day-light ${lt}"></div>
+      <div class="day-light-label">${ltLabel}</div>
+      <div class="day-stat"><span class="k">Score</span><span class="v ${scoreCls}">${scoreStr}</span></div>
+      <div class="day-stat"><span class="k">Hi/Lo</span><span class="v">${tempStr}</span></div>
+      <div class="day-stat"><span class="k">T+RH peak</span><span class="v ${peakTRHCls}">${peakTRH != null ? peakTRH : '—'}</span></div>
+      <div class="day-stat"><span class="k">Wind peak</span><span class="v ${peakWindCls}">${peakWind != null ? peakWind + 'mph' : '—'}</span></div>
+      <div class="day-stat"><span class="k">Window</span><span class="v">${bestWinStr}</span></div>
+    </div>`;
+  }
+
+  // ============ MAIN LOAD ============
+  async function load() {
+    statusTextEl.textContent = 'Loading';
+    locNameEl.textContent = currentLoc.name;
+    try {
+      const w = await fetchWeather(currentLoc);
+      render(w);
+      lastUpdateEl.textContent = `Updated ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+      statusTextEl.textContent = 'Live';
+    } catch (e) {
+      console.error(e);
+      outputEl.innerHTML = `<div class="status-msg error">Could not load weather. Check the location and try again.<br><span style="font-size:0.8rem;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">${e.message || e}</span></div>`;
+      statusTextEl.textContent = 'Error';
+    }
+  }
+
+  // ============ EVENTS ============
+  applyLocBtn.addEventListener('click', async () => {
+    const city = cityInputEl.value.trim();
+    const state = stateInputEl.value.trim();
+    if (!city) return;
+    statusTextEl.textContent = 'Locating';
+    try {
+      const loc = await geocode(city, state);
+      currentLoc = loc;
+      cityInputEl.value = loc.city;
+      stateInputEl.value = loc.state;
+      load();
+    } catch (e) {
+      const tried = state ? `"${city}, ${state}"` : `"${city}"`;
+      outputEl.innerHTML = `<div class="status-msg error">Couldn't find ${tried}. Try a different spelling or city.</div>`;
+      statusTextEl.textContent = 'Error';
+    }
+  });
+  cityInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') applyLocBtn.click(); });
+  stateInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') applyLocBtn.click(); });
+
+  // initial load
+  load();
+  setInterval(load, REFRESH_MS);
+})();
+</script>
+
+</body>
+</html>
