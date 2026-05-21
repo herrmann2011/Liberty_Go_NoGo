@@ -411,6 +411,15 @@
   .why-list li.cau .ico { color: var(--caution); }
   .why-list li.no .ico { color: var(--bad); }
 
+  /* Field-conditions disclaimer — plain bold text above today's date */
+  .today-disclaimer {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
   /* SECTION HEADERS */
   .section-head {
     display: flex;
@@ -533,6 +542,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    gap: 8px;
     font-size: 0.78rem;
     padding: 3px 0;
     border-top: 1px dashed var(--line-soft);
@@ -544,11 +554,13 @@
     letter-spacing: 0.08em;
     color: var(--ink-faint);
     text-transform: uppercase;
+    flex-shrink: 0;
   }
   .day-stat .v {
     font-family: 'IBM Plex Mono', monospace;
     font-weight: 500;
     color: var(--ink);
+    text-align: right;
   }
   .day-stat .v.warn { color: var(--bad); }
   .day-stat .v.good { color: var(--good-deep); }
@@ -718,13 +730,15 @@
 
   <!-- FOOTNOTE -->
   <div class="footnote" id="footnote" style="display:none;">
-    <b>How this is calculated.</b> Temperature, humidity, and wind forecasts are sourced from the National Weather Service via api.weather.gov — the same forecast data used by NOAA's website, The Weather Channel, and other major U.S. weather services. Cloud cover, precipitation amounts, and historical conditions are sourced from Open-Meteo's high-resolution forecast. The two sources are merged so that NWS provides the forecaster-adjusted temperature and humidity values, while Open-Meteo provides the cloud-cover and precipitation detail not exposed by NWS's hourly endpoint. Sunrise and sunset times are calculated from Open-Meteo's astronomical endpoint for the exact latitude and longitude.
+    <b>How this is calculated.</b> Temperature, humidity, and wind come from the National Weather Service (api.weather.gov). Cloud cover and precipitation come from Open-Meteo. Sunrise and sunset are calculated for your exact latitude and longitude.
     <br><br>
-    <b>The Liberty activity score.</b> The decision logic blends six factors, weighted in the order below. <i>(1) Temperature + relative humidity ≥ 100</i> is treated as a hard minimum. Below that threshold, ambient humidity is insufficient to keep the leaf surface wet long enough for the herbicide to absorb, and control of established weeds drops off sharply. <i>(2) Temperature + relative humidity ≥ 150</i> is the optimal range, where field performance on larger and more difficult weeds is most consistent. <i>(3) Full sun</i> is essential. Glufosinate is light-activated and requires active photosynthesis to convert to its herbicidal form. Published research (Coetzer et al. 2001, Takano & Dayan 2020, Purdue Weed Science) consistently shows midday applications under full sun outperforming early-morning, late-evening, or overcast applications by 15–40% on hard-to-control species. <i>(4) Wind</i> between 3 and 10 mph is ideal. Below 3 mph raises the risk of temperature-inversion drift; above 10 mph exceeds the label limit for ground application, and above 15 mph is treated as a hard stop. <i>(5) Air temperature</i> between 60 °F and 85 °F is preferred. Above 85 °F with low relative humidity, volatility and drift risk increase materially. <i>(6) Rain</i> within four hours of application is a hard stop, consistent with the Liberty label's rainfast requirement.
+    <b>The Liberty activity score.</b> Six factors, in order of weight: <i>Temp + RH ≥ 100</i> (hard minimum — below this, humidity is too low to keep the leaf wet for absorption); <i>Temp + RH ≥ 150</i> (optimal); <i>full sun</i> (glufosinate is light-activated — Coetzer 2001, Takano &amp; Dayan 2020, Purdue Weed Science show 15–40% better control midday under full sun); <i>wind 3–10 mph</i> (below 3 = inversion risk, above 10 = label violation, above 15 = hard stop); <i>temp 60–85 °F</i>; <i>no rain within 4 hours</i> (label rainfast requirement).
     <br><br>
-    <b>The hourly view</b> shades each daylight hour green (full activation conditions), amber (workable but suboptimal), red (label violation or insufficient activity), or dark (outside daylight hours — glufosinate is not active without sunlight). The recommended start time is the earliest green hour after sunrise that leaves sufficient daylight for the activated herbicide to translocate before sunset.
+    <b>The hourly view</b> shades each daylight hour green (full activation), amber (workable but compromised), red (label violation or insufficient activity), or dark (night — glufosinate is not active without sunlight).
     <br><br>
-    <b>This tool is decision support, not a label.</b> It does not account for tank-mix partners, adjuvant selection, nozzle configuration, sprayer speed, weed size or species, prior herbicide passes, crop stage, or other field-level factors that require operator judgment. The published research it is calibrated against (Coetzer, Takano &amp; Dayan, Purdue, Iowa State, Michigan State Extension) provides a defensible view of the <i>environmental</i> spray window only. Always read and follow the Liberty / Liberty ULTRA label.
+    <b>What this tool does not see.</b> A weather forecast does not see your field. Dew, soil moisture, ruts, weed size and species, resistance, prior passes, tank-mix partners, adjuvants, nozzles, pressure, sprayer speed, boom height, crop stage, and inversions are all invisible to it — and any one of them can change the outcome. <b>A green hour is a forecast, not a recommendation. The decision to spray is yours.</b>
+    <br><br>
+    <b>No warranty. No liability.</b> This tool is provided "as is," without warranty of any kind. Forecasts are uncertain and third-party data may be wrong. To the maximum extent permitted by law, Herrmann Integrated Agronomy disclaims all liability for any outcome resulting from use of this tool — including ineffective control, crop injury, drift, label violations, regulatory action, lost yield, or any other direct or consequential damages. The decision to spray, and full responsibility for that decision, rests with the operator. Always read and follow the Liberty / Liberty ULTRA label.
   </div>
 
   <!-- BRAND FOOTER -->
@@ -733,7 +747,7 @@
     <div class="copyright-line">
       <div>© <span class="year">2026</span> Herrmann Integrated Agronomy · All rights reserved.</div>
       <div style="margin-top:4px; text-transform:none; letter-spacing:0.04em; color:var(--ink-faint); font-size:0.6rem; line-height:1.5; max-width:520px;">
-        Spray Liberty Today? and all associated code, copy, and design are the property of Herrmann Integrated Agronomy. Reproduction, redistribution, or deployment of this tool — in whole or in part — on any domain not owned and operated by Herrmann Integrated Agronomy is prohibited without written permission. Decision support only; not a substitute for the product label.
+        Spray Liberty Today? and all associated code, copy, and design are the property of Herrmann Integrated Agronomy. Reproduction or deployment on any domain not owned by HIA is prohibited without written permission. Decision support only — provided "as is" with no warranty. HIA disclaims all liability for spray decisions, crop or drift damage, label violations, or any other outcome. Always read and follow the Liberty / Liberty ULTRA label.
       </div>
       <div style="margin-top:6px; color:var(--ink-faint); font-size:0.58rem; opacity:0.75;">v1.1 · HerrmannAg-LSH-2026-v1.1-7f3a91c3</div>
     </div>
@@ -1204,7 +1218,7 @@
     const headlineMap = {
       go:  { text: 'Yes — go.', detail: 'The temperature and relative humidity threshold is satisfied across a meaningful portion of daylight today, and sun, wind, and rain timing align. Review the hourly view to select the best window.' },
       cau: { text: 'It depends.', detail: 'A workable window exists today, but it is narrow or compromised. Sun, humidity, wind, or rain timing reduce expected activity. Review the hourly view to determine when, or whether, conditions become acceptable.' },
-      no:  { text: 'No — hold off.', detail: 'Either the temperature + relative humidity minimum is not satisfied today, or wind, rain timing, or cloud cover disqualifies the day. Review the week ahead — most weeks have a workable window within seven days.' }
+      no:  { text: 'No — hold off.', detail: 'Either the temperature + relative humidity minimum is not satisfied today, or wind, rain timing, or cloud cover disqualifies the day.' }
     };
     let detail = headlineMap[overall].detail;
     if (overall !== 'go' && bestDay.dateISO !== todayD.dateISO && bestDay.light === 'go') {
@@ -1217,6 +1231,7 @@
     html += `<section class="today-block">
       <div class="today-stripe ${overall}"></div>
       <div class="today-inner">
+        <div class="today-disclaimer">This tool does not account for dew or field conditions. Check your fields before spraying.</div>
         <div class="today-eyebrow">${fmtLongDate(todayD.dateObj)} · today's call</div>
         <h2 class="today-headline ${overall}">${headlineMap[overall].text.replace(/—\s(\w+)/, (m, p) => `— <em>${p}</em>`)}</h2>
         <p class="today-summary">${detail}</p>
