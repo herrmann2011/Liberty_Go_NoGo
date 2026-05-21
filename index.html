@@ -2,11 +2,11 @@
 <!--
   ============================================================================
   Spray Liberty Today? — Glufosinate Decision Tool
-  © 2026 Herrmann Ag · All rights reserved.
+  © 2026 Herrmann Integrated Agronomy · All rights reserved.
 
-  Build fingerprint: HerrmannAg-LSH-2026-v1-7f3a91c2
+  Build fingerprint: HerrmannAg-LSH-2026-v1.1-7f3a91c3
   Origin: herrmannag.com
-  Licensed for use only on domains owned and operated by Herrmann Ag.
+  Licensed for use only on domains owned and operated by Herrmann Integrated Agronomy.
   Unauthorized reproduction, redistribution, or deployment is prohibited.
   ============================================================================
 -->
@@ -289,6 +289,11 @@
     padding: 14px 16px 18px;
     border-radius: 2px;
     margin-bottom: 12px;
+  }
+  .hourly-strip-row + .hourly-strip-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line-soft);
   }
   .hourly-strip-wrap .strip-title {
     font-family: 'IBM Plex Mono', monospace;
@@ -677,8 +682,8 @@
 
   <!-- BRAND BAR -->
   <div class="brandbar">
-    <img class="logo" src="https://img1.wsimg.com/isteam/ip/e2c8983a-bdb1-46c2-bda4-5a7ed1f19e32/blob-49a6601.png/:/rs=h:175,m" alt="Herrmann Ag Logo">
-    <div class="copyright">© <span id="year-top"></span> Herrmann Ag · All rights reserved</div>
+    <img class="logo" src="https://img1.wsimg.com/isteam/ip/e2c8983a-bdb1-46c2-bda4-5a7ed1f19e32/blob-49a6601.png/:/rs=h:175,m" alt="Herrmann Integrated Agronomy Logo">
+    <div class="copyright">© <span id="year-top"></span> Herrmann Integrated Agronomy · All rights reserved</div>
   </div>
 
   <!-- MASTHEAD -->
@@ -724,21 +729,21 @@
 
   <!-- BRAND FOOTER -->
   <div class="brand-footer">
-    <img class="logo-small" src="https://img1.wsimg.com/isteam/ip/e2c8983a-bdb1-46c2-bda4-5a7ed1f19e32/blob-49a6601.png/:/rs=h:175,m" alt="Herrmann Ag Logo">
+    <img class="logo-small" src="https://img1.wsimg.com/isteam/ip/e2c8983a-bdb1-46c2-bda4-5a7ed1f19e32/blob-49a6601.png/:/rs=h:175,m" alt="Herrmann Integrated Agronomy Logo">
     <div class="copyright-line">
-      <div>© <span class="year">2026</span> Herrmann Ag · All rights reserved.</div>
+      <div>© <span class="year">2026</span> Herrmann Integrated Agronomy · All rights reserved.</div>
       <div style="margin-top:4px; text-transform:none; letter-spacing:0.04em; color:var(--ink-faint); font-size:0.6rem; line-height:1.5; max-width:520px;">
-        Spray Liberty Today? and all associated code, copy, and design are the property of Herrmann Ag. Reproduction, redistribution, or deployment of this tool — in whole or in part — on any domain not owned and operated by Herrmann Ag is prohibited without written permission. Decision support only; not a substitute for the product label.
+        Spray Liberty Today? and all associated code, copy, and design are the property of Herrmann Integrated Agronomy. Reproduction, redistribution, or deployment of this tool — in whole or in part — on any domain not owned and operated by Herrmann Integrated Agronomy is prohibited without written permission. Decision support only; not a substitute for the product label.
       </div>
-      <div style="margin-top:6px; color:var(--ink-faint); font-size:0.58rem; opacity:0.75;">v1.0 · HerrmannAg-LSH-2026-v1-7f3a91c2</div>
+      <div style="margin-top:6px; color:var(--ink-faint); font-size:0.58rem; opacity:0.75;">v1.1 · HerrmannAg-LSH-2026-v1.1-7f3a91c3</div>
     </div>
   </div>
 </div>
 
 <script>
-/*! Herrmann Ag — Spray Liberty Today? · v1.0 · © 2026 Herrmann Ag · All rights reserved.
- *  Build: HerrmannAg-LSH-2026-v1-7f3a91c2
- *  Licensed for use only on domains owned and operated by Herrmann Ag.
+/*! Herrmann Integrated Agronomy — Spray Liberty Today? · v1.1 · © 2026 Herrmann Integrated Agronomy · All rights reserved.
+ *  Build: HerrmannAg-LSH-2026-v1.1-7f3a91c3
+ *  Licensed for use only on domains owned and operated by Herrmann Integrated Agronomy.
  *  Unauthorized reproduction, redistribution, or deployment is prohibited.
  */
 (() => {
@@ -1186,6 +1191,7 @@
     // Build per-day analysis
     const days = daily.time.map((_, i) => rollupDay(i, daily, hourly));
     const todayD = days[0];
+    const tomorrowD = days[1] || null;
 
     // Find best day in week (highest avg score, ties go to earlier date)
     let bestDay = days[0];
@@ -1220,7 +1226,7 @@
           ${renderWindowBox('Peak activity window', todayD, 'peak')}
         </div>
 
-        ${renderHourlyStrip(todayD)}
+        ${renderHourlyStripPair(todayD, tomorrowD)}
 
         ${renderWhy(todayD)}
       </div>
@@ -1352,8 +1358,10 @@
     return '12';
   }
 
-  function renderHourlyStrip(day) {
-    // 24-hour strip for today.
+  function renderHourlyStrip(day, dayLabel, showLegend) {
+    // 24-hour strip for a given day. dayLabel is the row title (e.g. "Today",
+    // "Tomorrow · Fri Sep 26"). showLegend controls whether the legend swatches
+    // appear on this row (we only show the legend once when stacking two days).
     const hours = Array.from({ length: 24 }, (_, h) => h);
     // Map hourScores by hour-of-day
     const scoreByHour = {};
@@ -1394,16 +1402,30 @@
       labels += `<span>${showLabel ? fmtClock(h) : ''}</span>`;
     }
 
-    return `<div class="hourly-strip-wrap">
-      <div class="strip-title">
-        <span>Hour-by-hour today · hover for details</span>
-        <span class="legend-mini">
+    const legendHtml = showLegend ? `<span class="legend-mini">
           <span class="sw go"></span>Go<span class="sw cau"></span>Mixed<span class="sw no"></span>Hold<span class="sw night"></span>Night
-        </span>
+        </span>` : '';
+
+    return `<div class="hourly-strip-row">
+      <div class="strip-title">
+        <span>${dayLabel}</span>
+        ${legendHtml}
       </div>
       <div class="hour-strip">${cells}</div>
       <div class="hour-labels">${labels}</div>
     </div>`;
+  }
+
+  function renderHourlyStripPair(todayDay, tomorrowDay) {
+    const todayLabel = `Today · ${fmtWeekday(todayDay.dateObj)} ${fmtShortDate(todayDay.dateObj)} · hover for details`;
+    const tomorrowLabel = tomorrowDay
+      ? `Tomorrow · ${fmtWeekday(tomorrowDay.dateObj)} ${fmtShortDate(tomorrowDay.dateObj)}`
+      : null;
+    let inner = renderHourlyStrip(todayDay, todayLabel, true);
+    if (tomorrowDay) {
+      inner += renderHourlyStrip(tomorrowDay, tomorrowLabel, false);
+    }
+    return `<div class="hourly-strip-wrap">${inner}</div>`;
   }
 
   function renderWhy(day) {
