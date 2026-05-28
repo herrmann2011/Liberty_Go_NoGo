@@ -732,7 +732,7 @@
   <div class="footnote" id="footnote" style="display:none;">
     <b>How this is calculated.</b> Temperature, humidity, and wind come from the National Weather Service (api.weather.gov). Cloud cover and precipitation come from Open-Meteo. Sunrise and sunset are calculated for your exact latitude and longitude.
     <br><br>
-    <b>The Liberty activity score.</b> Six factors, in order of weight: <i>Temp + RH ≥ 100</i> (hard minimum — below this, humidity is too low to keep the leaf wet for absorption); <i>Temp + RH ≥ 150</i> (optimal); <i>full sun</i> (glufosinate is light-activated — Coetzer 2001, Takano &amp; Dayan 2020, Purdue Weed Science show 15–40% better control midday under full sun); <i>wind 3–10 mph</i> (below 3 = inversion risk, above 10 = label violation, above 15 = hard stop); <i>temp 60–85 °F</i>; <i>no rain within 4 hours</i> (label rainfast requirement).
+    <b>The Liberty activity score.</b> Six factors, in order of weight: <i>Temp + RH ≥ 100</i> (hard minimum — below this, humidity is too low to keep the leaf wet for absorption); <i>Temp + RH ≥ 150</i> (optimal); <i>full sun</i> (glufosinate is light-activated — Coetzer 2001, Takano &amp; Dayan 2020, Purdue Weed Science show 15–40% better control midday under full sun); <i>wind 3–10 mph</i> (below 3 = inversion risk, above 10 = label violation, above 15 = hard stop); <i>temp 60–85 °F</i>; <i>no rain within 4 hours</i> (label rainfast requirement); <i>time of day</i> (the label directs applying 2h after sunrise and 2h before sunset — within 2h of sunset is flagged caution, within 1h is a hard stop, and the first ~2h after sunrise is caution for cool temps and dew).
     <br><br>
     <b>The hourly view</b> shades each daylight hour green (full activation), amber (workable but compromised), red (label violation or insufficient activity), or dark (night — glufosinate is not active without sunlight).
     <br><br>
@@ -798,6 +798,16 @@
   const SUN_CLEAR_MAX   = 30;   // % cloud cover: clear/mostly sunny
   const SUN_PARTLY_MAX  = 70;   // % cloud: partly cloudy — usable but not ideal
   // above 70% = overcast = caution/no
+
+  // Light-activation timing window (BASF Liberty / Liberty ULTRA label:
+  // "apply 2 hours after sunrise and 2 hours before sunset for maximum efficacy").
+  // Glufosinate is light-activated, so applications too close to sunset don't
+  // get enough active daylight to translocate; applications too close to
+  // sunrise run into cool temps and dew.
+  const SUNSET_HARD_HRS   = 1;   // within 1h of sunset = hard stop (no daylight left to work)
+  const SUNSET_CAUTION_HRS = 2;  // within 2h of sunset = caution
+  const SUNRISE_CAUTION_HRS = 2; // within ~2h after sunrise = caution (cool temps, dew)
+  const MS_PER_HR = 3600 * 1000;
 
   // ============ DOM ============
   const outputEl = document.getElementById('output');
@@ -996,6 +1006,21 @@
       return { score: 0, light: 'night', reasons: ['Night — Liberty requires sunlight to activate'], isDaylight: false, t, rh, cloud, wind, gust, time, idx };
     }
 
+    // --- Light-activation timing buffers (label: 2h after sunrise / 2h before sunset) ---
+    // The hour cell represents the START of a 1-hour application block.
+    let nearSunsetHard = false;   // within 1h of sunset
+    let nearSunsetCaution = false; // within 2h of sunset
+    let nearSunriseCaution = false; // within ~2h after sunrise
+    if (sunsetTs != null) {
+      const hrsToSunset = (sunsetTs - tsLocal) / MS_PER_HR;
+      if (hrsToSunset <= SUNSET_HARD_HRS) nearSunsetHard = true;
+      else if (hrsToSunset <= SUNSET_CAUTION_HRS) nearSunsetCaution = true;
+    }
+    if (sunriseTs != null) {
+      const hrsAfterSunrise = (tsLocal - sunriseTs) / MS_PER_HR;
+      if (hrsAfterSunrise < SUNRISE_CAUTION_HRS) nearSunriseCaution = true;
+    }
+
     // Forward-looking rain window: 4 hours rainfast
     let rainSoonIn = 0;
     let rainSoonPop = 0;
@@ -1036,6 +1061,11 @@
     if (t != null && t > TEMP_HARD_F && rh != null && rh < 40) {
       hardStop = true;
       reasons.push(`${Math.round(t)}°F with ${Math.round(rh)}% RH — heat + low humidity stack drift and volatility risk`);
+    }
+
+    if (nearSunsetHard) {
+      hardStop = true;
+      reasons.push(`Within 1 hour of sunset — not enough active daylight left for glufosinate to work (label: apply ≥ 2h before sunset)`);
     }
 
     if (hardStop) {
@@ -1110,6 +1140,16 @@
         cautionCount++;
         reasons.push(`Wind ${Math.round(wind)} mph — at label edge, watch drift`);
       }
+    }
+
+    // --- Light-timing caution buffers ---
+    if (nearSunsetCaution) {
+      cautionCount++;
+      reasons.push(`Within 2 hours of sunset — label calls for ≥ 2h of daylight after application; activation is compromised this late`);
+    }
+    if (nearSunriseCaution) {
+      cautionCount++;
+      reasons.push(`Within ~2 hours of sunrise — cool temps and dew on the leaf compromise early activation`);
     }
 
     score = Math.max(0, Math.min(100, score));
@@ -1459,10 +1499,10 @@
       // Classify: text containing "optimal" / "ideal" / "full sun" / "clean" -> go,
       // contains "label" / "below" / "fail" / "overcast" / "drift" -> cau/no
       let level = 'go';
-      if (/over|below|fail|inside the 4-hour|drift|overcast|marginal|outside ideal|sub|just above|watch/i.test(r)) {
+      if (/over|below|fail|inside the 4-hour|drift|overcast|marginal|outside ideal|sub|just above|watch|compromised|cool temps|hours of sunset|hours of sunrise/i.test(r)) {
         level = 'cau';
       }
-      if (/well over|label limit|below floor|never gets|hard stop/i.test(r)) {
+      if (/well over|label limit|below floor|never gets|hard stop|hour of sunset/i.test(r)) {
         level = 'no';
       }
       if (sourceHour.light === 'no' && /Temp \+ RH|chance/.test(r)) level = 'no';
