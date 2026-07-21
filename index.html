@@ -732,7 +732,7 @@
   <div class="footnote" id="footnote" style="display:none;">
     <b>How this is calculated.</b> Temperature, humidity, and wind come from the National Weather Service (api.weather.gov). Cloud cover and precipitation come from Open-Meteo. Sunrise and sunset are calculated for your exact latitude and longitude.
     <br><br>
-    <b>The Liberty activity score.</b> Six factors, in order of weight: <i>Temp + RH ≥ 100</i> (hard minimum — below this, humidity is too low to keep the leaf wet for absorption); <i>Temp + RH ≥ 150</i> (optimal); <i>full sun</i> (glufosinate is light-activated — Coetzer 2001, Takano &amp; Dayan 2020, Purdue Weed Science show 15–40% better control midday under full sun); <i>wind 3–10 mph</i> (below 3 = inversion risk, above 10 = label violation, above 15 = hard stop); <i>temp 60–85 °F</i>; <i>no rain within 4 hours</i> (label rainfast requirement); <i>time of day</i> (the label directs applying 2h after sunrise and 2h before sunset — within 2h of sunset is flagged caution, within 1h is a hard stop, and the first ~2h after sunrise is caution for cool temps and dew).
+    <b>The Liberty activity score.</b> Six factors, in order of weight: <i>Temp + RH ≥ 100</i> (hard minimum — below this, humidity is too low to keep the leaf wet for absorption); <i>Temp + RH ≥ 150</i> (optimal); <i>full sun</i> (glufosinate is light-activated — Coetzer 2001, Takano &amp; Dayan 2020, Purdue Weed Science show 15–40% better control midday under full sun); <i>wind 3–10 mph ideal</i> (below 3 = inversion risk; 10–15 = above general drift-reduction guidance but still inside the Liberty ULTRA label's mandatory 3–15 mph sustained-wind range, flagged as caution; above 15 = exceeds the label and is a hard stop); <i>temp 60–85 °F</i>; <i>no rain within 4 hours</i> (label rainfast requirement); <i>time of day</i> (the label directs applying 2h after sunrise and 2h before sunset — within 2h of sunset is flagged caution, within 1h is a hard stop, and the first ~2h after sunrise is caution for cool temps and dew).
     <br><br>
     <b>The hourly view</b> shades each daylight hour green (full activation), amber (workable but compromised), red (label violation or insufficient activity), or dark (night — glufosinate is not active without sunlight).
     <br><br>
@@ -787,8 +787,8 @@
   const TEMP_HARD_F   = 92;    // above: drop the load with low RH — hard stop in label-drift mode
 
   const WIND_MIN_MPH    = 3;     // below: inversion risk
-  const WIND_LABEL_MPH  = 10;    // label limit for most ground apps
-  const WIND_HARD_MPH   = 15;    // hard stop
+  const WIND_ADVISORY_MPH = 10;  // general drift-reduction guidance (older Liberty label) — advisory, not a cutoff
+  const WIND_HARD_MPH   = 15;    // mandatory sustained-wind ceiling — Liberty ULTRA ESA-compliant label requires sustained wind between 3-15 mph
 
   const RAIN_FREE_HRS = 4;     // rainfast period (Liberty label)
   const RAIN_HARD_IN  = 0.02;  // any measurable precip in next 4h after spray = stop
@@ -1042,10 +1042,7 @@
     // --- HARD STOPS (label + agronomist floor) ---
     if (wind != null && wind > WIND_HARD_MPH) {
       hardStop = true;
-      reasons.push(`Wind ${Math.round(wind)} mph — well over 10 mph label limit`);
-    } else if (wind != null && wind > WIND_LABEL_MPH) {
-      hardStop = true; // user picked "both as hard stops"
-      reasons.push(`Wind ${Math.round(wind)} mph — over 10 mph label limit`);
+      reasons.push(`Wind ${Math.round(wind)} mph — well over the 15 mph label limit for sustained wind`);
     }
     if (rainSoonIn >= RAIN_HARD_IN || rainSoonPop >= RAIN_POP_HARD) {
       hardStop = true;
@@ -1135,10 +1132,14 @@
         score += 8;
         cautionCount++;
         reasons.push(`Wind ${Math.round(wind)} mph — calm, inversion drift risk`);
-      } else if (wind <= WIND_LABEL_MPH) {
+      } else if (wind <= WIND_ADVISORY_MPH) {
+        score += 14;
+        cautionCount++;
+        reasons.push(`Wind ${Math.round(wind)} mph — a touch above the 8 mph sweet spot, watch drift`);
+      } else if (wind <= WIND_HARD_MPH) {
         score += 10;
         cautionCount++;
-        reasons.push(`Wind ${Math.round(wind)} mph — at label edge, watch drift`);
+        reasons.push(`Wind ${Math.round(wind)} mph — above the 10 mph drift-reduction guidance but within the Liberty ULTRA label's 3–15 mph sustained-wind range`);
       }
     }
 
@@ -1298,7 +1299,7 @@
 
     const peakWind = peakHour && peakHour.wind != null ? `${Math.round(peakHour.wind)}` : '—';
     const peakWindSub = peakHour && peakHour.wind != null
-      ? (peakHour.wind > WIND_LABEL_MPH ? 'over label limit' : (peakHour.wind < WIND_MIN_MPH ? 'calm — drift risk' : 'inside label window'))
+      ? (peakHour.wind > WIND_HARD_MPH ? 'over label limit' : (peakHour.wind > WIND_ADVISORY_MPH ? 'above guidance — within label' : (peakHour.wind < WIND_MIN_MPH ? 'calm — drift risk' : 'inside label window')))
       : '—';
 
     const peakTRH = peakHour && peakHour.t != null && peakHour.rh != null ? `${Math.round(peakHour.t + peakHour.rh)}` : '—';
@@ -1557,7 +1558,7 @@
     // Peak wind
     const peakWind = (day.peak && day.peak.wind != null) ? Math.round(day.peak.wind) : null;
     const peakWindCls = peakWind != null
-      ? (peakWind > WIND_LABEL_MPH ? 'poor' : (peakWind < WIND_MIN_MPH ? 'warn' : 'good'))
+      ? (peakWind > WIND_HARD_MPH ? 'poor' : (peakWind > WIND_ADVISORY_MPH ? 'warn' : (peakWind < WIND_MIN_MPH ? 'warn' : 'good')))
       : '';
 
     return `<div class="${classes.join(' ')}">
